@@ -7,8 +7,10 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GOCACHE: /tmp/.cache
     ports:
       - "8089:8080"
+    user: "${UID}:${GID}"
     depends_on:
       - goai-db
     volumes:

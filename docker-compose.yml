@@ -1,0 +1,41 @@
+services:
+  api:
+    image: golang:1.24-alpine
+    container_name: goai-api
+    ports:
+      - "8089:8080"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - ./app:/app
+      - ./.env:/app/.env
+    working_dir: /app
+    command: ["go", "run", "main.go"]
+
+  db:
+    image: mysql:8.0
+    container_name: goai-mysql
+    restart: unless-stopped
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: '${DB_NAME:-goai_db}'
+      MYSQL_USER: '${DB_USER:-goai_user}'
+      MYSQL_PASSWORD: '${DB_PASSWORD:-secret}'
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  adminer:
+    image: adminer
+    container_name: goai-adminer
+    restart: unless-stopped
+    ports:
+      - "8069:8080"
+    depends_on:
+      - db
+
+volumes:
+  mysql_data:

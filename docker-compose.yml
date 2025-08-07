@@ -2,16 +2,19 @@ services:
   goai-api:
     image: golang:1.24
     container_name: goai-api
+    environment:
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
       - "8089:8080"
-    env_file:
-      - .env
     depends_on:
       - goai-db
     volumes:
-      - ./app:/app
-      - ./.env:/app/.env
-    working_dir: /app
+      - ./:/goai
+      - /home/leouix/apps/go-tmp:/goai-tmp
+    working_dir: /goai/app
     command: ["go", "run", "main.go"]
 
   goai-db:

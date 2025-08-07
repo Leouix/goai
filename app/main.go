@@ -8,28 +8,23 @@ import (
     "os"
     "path/filepath"
 
-    "github.com/joho/godotenv"
     "github.com/gin-gonic/gin"
     openai "github.com/sashabaranov/go-openai"
 )
 
 type RequestBody struct {
     Prompt string `json:"prompt"`
+    BasePath string `json:"basePath"`
 }
 
 var openaiClient *openai.Client
 
 func main() {
 
-     err := godotenv.Load()
-        if err != nil {
-            log.Fatal("Ошибка при загрузке .env файла")
-        }
-
-        apiKey := os.Getenv("OPENAI_API_KEY")
-        if apiKey == "" {
-            log.Fatal("OPENAI_API_KEY не задан")
-        }
+    apiKey := os.Getenv("OPENAI_API_KEY")
+    if apiKey == "" {
+        log.Fatal("OPENAI_API_KEY не задан")
+    }
 
     openaiClient = openai.NewClient(apiKey)
 
@@ -80,17 +75,31 @@ func handleGenerate(c *gin.Context) {
         return
     }
 
-    // Сохраняем файлы
-    for path, code := range files {
-        if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create dirs", "path": path})
-            return
-        }
-        if err := os.WriteFile(path, []byte(code), 0644); err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not write file", "path": path})
-            return
-        }
-    }
+    // Задаём базовый путь по умолчанию
+	basePath := "/goai-tmp"
 
-    c.JSON(http.StatusOK, gin.H{"status": "success", "files": files})
+   // Сохраняем файлы в указанную директорию
+   	for relPath, code := range files {
+   		fullPath := filepath.Join(basePath, relPath)
+
+   		if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
+   			c.JSON(http.StatusInternalServerError, gin.H{
+   				"error": "Could not create directories",
+   				"path":  fullPath,
+   			})
+   			return
+   		}
+
+   		if err := os.WriteFile(fullPath, []byte(code), 0644); err != nil {
+   			c.JSON(http.StatusInternalServerError, gin.H{
+   				"error": "Could not write file",
+   				"path":  fullPath,
+   			})
+   			return
+   		}
+   	}
+
+    c.JSON(http.StatusOK, gin.H{
+    		"status": "success",
+    		"files":  files})
 }

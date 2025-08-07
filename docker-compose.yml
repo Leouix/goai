@@ -1,22 +1,22 @@
 services:
-  api:
-    image: golang:1.24-alpine
+  goai-api:
+    image: golang:1.24
     container_name: goai-api
     ports:
       - "8089:8080"
     env_file:
       - .env
     depends_on:
-      - db
+      - goai-db
     volumes:
       - ./app:/app
       - ./.env:/app/.env
     working_dir: /app
     command: ["go", "run", "main.go"]
 
-  db:
+  goai-db:
     image: mysql:8.0
-    container_name: goai-mysql
+    container_name: goai-db
     restart: unless-stopped
     ports:
       - "3308:3306"
@@ -28,14 +28,14 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
-  adminer:
+  goai-adminer:
     image: adminer
     container_name: goai-adminer
     restart: unless-stopped
     ports:
       - "8069:8080"
     depends_on:
-      - db
+      - goai-db
 
 volumes:
   mysql_data:

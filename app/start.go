@@ -69,6 +69,8 @@ func main() {
 	// Путь для сохранения файлов
 	basePath := "/home/leouix/apps/test"
 
+	// @todo добавить проверку что путь существует
+
 	for relPath, code := range files {
 		fullPath := filepath.Join(basePath, relPath)
 

@@ -50,10 +50,10 @@ func main() {
     // Если нужно, раскомментируйте код ниже, чтобы продолжить выполнение
 
     // Запрос к OpenAI
-  //  files := generateFilesFromOpenAI(string(jsonData))
+    files := generateFilesFromOpenAI(string(jsonData))
 
     // Сохраняем результат
-  //  saveFiles(basePath, files)
+    saveFiles(basePath, files)
 
 }
 

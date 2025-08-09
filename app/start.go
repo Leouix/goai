@@ -44,8 +44,7 @@ func main() {
 {
   "./main.go": "package main\n\nfunc main() {...}",
   "./README.md": "# My Project"
-}`,
-			},
+}`,            },
 			{
 				Role:    "user",
 				Content: prompt,
@@ -69,7 +68,10 @@ func main() {
 	// Путь для сохранения файлов
 	basePath := "/home/leouix/apps/test"
 
-	// @todo добавить проверку что basePath существует
+	// Добавить проверку что basePath существует
+	if _, err := os.Stat(basePath); os.IsNotExist(err) {
+		log.Fatalf("Директория %s не существует", basePath)
+	}
 
 	for relPath, code := range files {
 		fullPath := filepath.Join(basePath, relPath)

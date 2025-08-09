@@ -31,7 +31,11 @@ func main() {
 
 	openaiClient = openai.NewClient(apiKey)
 
-    projectFiles := collectProjectFiles(basePath, []string{".go", ".mod", ".yml", ".env", ".md"}, 10)
+    currentDir, err := os.Getwd()
+    if err != nil {
+        log.Fatalf("Ошибка получения текущей директории: %v", err)
+    }
+    projectFiles := collectProjectFiles(currentDir, []string{".go"}, 5)
 
     // Чтение промпта из файла
 	promptData, err := os.ReadFile("context.txt")
@@ -89,12 +93,22 @@ func main() {
 
 }
 
+
 func collectProjectFiles(baseDir string, extensions []string, maxFiles int) string {
     var collected string
     count := 0
 
     filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
-        if err != nil || info.IsDir() {
+        if err != nil {
+            return nil
+        }
+        // Пропуск директорий .git, node_modules и т.д.
+        if info.IsDir() && (
+            info.Name() == ".git"
+            || info.Name() == "node_modules") {
+            return filepath.SkipDir
+        }
+        if info.IsDir() {
             return nil
         }
 

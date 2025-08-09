@@ -11,7 +11,7 @@ services:
       - goai-db
     volumes:
       - ./:/goai
-      - /home/leouix/apps/go-tmp:/goai-tmp
+      - /home/leouix/apps/goai:/goai-tmp
     working_dir: /goai/app
     command: ["go", "run", "main.go"]
 

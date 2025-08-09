@@ -26,8 +26,8 @@ func main() {
 
     basePath := "/home/leouix/apps/goai"
 
-    // 1. Находим все файлы с @todos
-    todos := findTodos(basePath, "// @todos")
+    // 1. Находим все файлы с @todo
+    todos := findTodos(basePath, "// @todo")
 
     // 2. Создаем новую карту для хранения очищенного содержимого файлов
     cleanedTodos := make(map[string]string)
@@ -50,10 +50,10 @@ func main() {
     // Если нужно, раскомментируйте код ниже, чтобы продолжить выполнение
 
     // Запрос к OpenAI
-    files := generateFilesFromOpenAI(string(jsonData))
+  //  files := generateFilesFromOpenAI(string(jsonData))
 
     // Сохраняем результат
-    saveFiles(basePath, files)
+  //  saveFiles(basePath, files)
 
 }
 
@@ -128,7 +128,7 @@ func generateFilesFromOpenAI(jsonData string) map[string]string {
           {
              Role: "system",
               Content: `Ты помощник программиста, мы пишем на PHP, Laravel, Symphony, Javascript, Go, используешь Docker, SQL и прочие технологии. Тебе предоставляется запрос вида: {'путь к   файлу': 'страница'}.
-                  Твоя задача: выполнить @todos, указанный на странице и заменить @todos своим кодом. Например удалить строку '// @todos выполнить проверку переменной $var' и на этом месте написать if (isset($var)) ...
+                  Твоя задача: выполнить @todo, указанный на странице и заменить @todo своим кодом. Например удалить строку '// @todo выполнить проверку переменной $var' и на этом месте написать if (isset($var)) ...
 
                   Вернуть **только** JSON вида:
                   {"путь к   файлу": "...исправленный код файла..."}

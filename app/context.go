@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	openai "github.com/sashabaranov/go-openai"
 	"github.com/joho/godotenv"
@@ -46,29 +47,48 @@ func main() {
 
 	// Отправка запроса в OpenAI
 	response, err := openaiClient.CreateChatCompletion(context.Background(), openai.ChatCompletionRequest{
-		Model: openai.GPT3Dot5Turbo,
-		Messages: []openai.ChatCompletionMessage{
-			{
-				Role: "system",
-				Content: `Ты помощник, создающий структуру проекта. Вот текущие файлы проекта:` + projectFiles + ` Ответ должен быть в формате JSON: путь => содержимое. Сгенерируй JSON-объект, где ключи — это пути к файлам, а значения — содержимое. Например:
-				{
-				    "./main.go": "package main\n\nfunc main() {...}",                                     "./README.md": "# My Project"}`,
-			},
-			{
-				Role:    "user",
-				Content: prompt,
-			},
-		},
-	})
+        Model: openai.GPT3Dot5Turbo,
+        ResponseFormat: &openai.ChatCompletionResponseFormat{
+            Type: "json_object",
+        },
+        Messages: []openai.ChatCompletionMessage{
+            {
+                Role: "system",
+                 Content: `Ты помощник, создающий структуру проекта.
+                              Вот текущие файлы проекта:` + projectFiles + `
+                              Твоя задача: вернуть **только** JSON вида:
+                              {"./main.go": "...код...", "./README.md": "...текст..."}
+                              Без комментариев, без Markdown, без текста до или после.
+                              Если хочешь что-то пояснить — НЕ пиши этого. Верни только JSON.`,
+            },
+            {
+                Role:    "user",
+                Content: prompt,
+            },
+        },
+    })
+
 
 	if err != nil {
 		log.Fatalf("Ошибка OpenAI запроса: %v", err)
 	}
 
-	content := response.Choices[0].Message.Content
+	// content := response.Choices[0].Message.Content
 
-	// Парсим JSON-ответ
-	var files map[string]string
+    // Парсим JSON-ответ
+    var files map[string]string
+
+    raw := response.Choices[0].Message.Content
+    re := regexp.MustCompile(`(?s)\{.*\}`)
+    content := re.FindString(raw)
+    if content == "" {
+        log.Fatalf("Не удалось извлечь JSON из ответа: %s", raw)
+    }
+    err = json.Unmarshal([]byte(content), &files)
+
+
+
+
 	err = json.Unmarshal([]byte(content), &files)
 	if err != nil {
 		log.Fatalf("Ошибка разбора JSON от OpenAI: %v\nRaw content: %s", err, content)
@@ -103,9 +123,7 @@ func collectProjectFiles(baseDir string, extensions []string, maxFiles int) stri
             return nil
         }
         // Пропуск директорий .git, node_modules и т.д.
-        if info.IsDir() && (
-            info.Name() == ".git"
-            || info.Name() == "node_modules") {
+        if info.IsDir() && (info.Name() == ".git" || info.Name() == "node_modules") {
             return filepath.SkipDir
         }
         if info.IsDir() {

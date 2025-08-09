@@ -37,8 +37,6 @@ func main() {
 
     fmt.Printf("jsonData: %s\n", jsonData)
 
-    // return
-
 	// Запрос к OpenAI
 	files := generateFilesFromOpenAI(string(jsonData))
 
@@ -60,7 +58,7 @@ func findTodos(root, marker string) map[string]string {
 
 		if !d.IsDir() {
 		    base := filepath.Base(path)
-            if base == "todos.go" || base == "todos2.go" {
+            if base == "todos.go" {
                 return nil // пропускаем этот файл
             }
 

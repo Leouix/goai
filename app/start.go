@@ -34,6 +34,8 @@ func main() {
 	}
 	prompt := string(promptData)
 
+	// @todos записывать в лог строку prompt
+
 	// Отправка запроса в OpenAI
 	response, err := openaiClient.CreateChatCompletion(context.Background(), openai.ChatCompletionRequest{
 		Model: openai.GPT3Dot5Turbo,
@@ -75,6 +77,8 @@ func main() {
 
 	for relPath, code := range files {
 		fullPath := filepath.Join(basePath, relPath)
+
+		// @todos записывать в лог fullPath
 
 		if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
 			log.Fatalf("Ошибка создания директорий: %v", err)

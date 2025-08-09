@@ -24,10 +24,9 @@ func main() {
         log.Fatal("Ошибка загрузки .env файла")
     }
 
-	// rootDir := "."
 	basePath := "/home/leouix/apps/goai"
 
-	todos := findTodos(basePath, "// @todo")
+	todos := findTodos(basePath, "// @todos")
 
 	// Формируем JSON для OpenAI
 	jsonData, err := json.MarshalIndent(todos, "", "  ")
@@ -36,6 +35,9 @@ func main() {
 	}
 
     fmt.Printf("jsonData: %s\n", jsonData)
+
+    return
+
 
 	// Запрос к OpenAI
 	files := generateFilesFromOpenAI(string(jsonData))
@@ -104,7 +106,7 @@ func generateFilesFromOpenAI(jsonData string) map[string]string {
 			{
 				Role: "system",
 				 Content: `Ты помощник программиста, мы пишем на PHP, Laravel, Symphony, Javascript, Go, используешь Docker, SQL и прочие технологии. Тебе предоставляется запрос вида: {'путь к   файлу': 'страница'.
-                  Твоя задача: выполнить @todo, указанный на странице и заменить @todo своим кодом. Например удалить строку '// @todo выполнить проверку переменной $var' и на этом месте написать if (isset($var)) ...
+                  Твоя задача: выполнить @todos, указанный на странице и заменить @todos своим кодом. Например удалить строку '// @todos выполнить проверку переменной $var' и на этом месте написать if (isset($var)) ...
 
                   Вернуть **только** JSON вида:
                   {"путь к   файлу": "...исправленный код файла..."}

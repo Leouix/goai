@@ -29,6 +29,8 @@ func main() {
     // 1. Находим все файлы с @todo
     todos := findTodos(basePath, "// @todo")
 
+     fmt.Printf("todos: %s\n", todos)
+
     // 2. Создаем новую карту для хранения очищенного содержимого файлов
     cleanedTodos := make(map[string]string)
     for path, content := range todos {
@@ -47,11 +49,16 @@ func main() {
 
     fmt.Printf("jsonData для запроса к OpenAI: %s\n", jsonData)
 
-    // Запрос к OpenAI
-    files := generateFilesFromOpenAI(string(jsonData))
+    if string(jsonData) != "" {
+         // Запрос к OpenAI
+        files := generateFilesFromOpenAI(string(jsonData))
 
-    // Сохраняем результат
-    saveFiles(basePath, files)
+        fmt.Printf("ответ OpenAI: %s\n", files)
+
+        // Сохраняем результат
+        saveFiles(basePath, files)
+    }
+
 
 }
 
@@ -68,6 +75,8 @@ func cleanCode(code string) string {
 
 func findTodos(root, marker string) map[string]string {
     results := make(map[string]string)
+
+    fmt.Printf("results: %s\n", results)
 
     filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
        if err != nil {
@@ -110,6 +119,7 @@ func findTodos(root, marker string) map[string]string {
 }
 
 func generateFilesFromOpenAI(jsonData string) map[string]string {
+
     apiKey := os.Getenv("OPENAI_API_KEY")
     if apiKey == "" {
        log.Fatal("OPENAI_API_KEY не задан")
@@ -119,50 +129,50 @@ func generateFilesFromOpenAI(jsonData string) map[string]string {
 
     response, err := client.CreateChatCompletion(context.Background(), openai.ChatCompletionRequest{
        Model: openai.GPT3Dot5Turbo,
-       ResponseFormat: &openai.ChatCompletionResponseFormat{
-          Type: "json_object",
-       },
-       Messages: []openai.ChatCompletionMessage{
-          {
-             Role: "system",
-              Content: `Ты помощник программиста, мы пишем на PHP, Laravel, Symphony, Javascript, Go, используешь Docker, SQL и прочие технологии. Тебе предоставляется запрос вида: {'путь к файлу': 'страница'}.
-                  Твоя задача: проанализировать код страницы на предмет задачи, описанной в @todo, выполнить @todo и заменить @todo своим кодом. Например удалить строку '// @todo выполнить проверку переменной $var' и на этом месте написать if (isset($var)) ...
+   		ResponseFormat: &openai.ChatCompletionResponseFormat{
+   			Type: "json_object",
+   		},
+   		Messages: []openai.ChatCompletionMessage{
+   			{
+   				Role: "system",
+   				Content: `Ты помощник программиста, мы пишем на PHP, Laravel, Symphony, Javascript, Go, используешь Docker, SQL и прочие технологии. Тебе предоставляется запрос вида: {'путь к файлу': 'страница'}.
+                                            Твоя задача: проанализировать код страницы на предмет задачи, описанной в @todo, выполнить этот @todo и заменить его своим кодом. Например удалить строку '// @todo выполнить проверку переменной $var' и на этом месте написать if (isset($var)) ...
 
-                  Вернуть **только** JSON вида:
-                  {"путь к файлу": "код файла"}
-                  Путь к файлу нужно оставить неизменным, он всегда должен начинаться с /app-project/....
-                  Никаких примеров добавлять не нужно.
-                  Без комментариев, без Markdown, без текста до или после.
-                  Если хочешь что-то пояснить — НЕ пиши этого.
-                  Мне очень важно получить формат JSON.`,
-          },
-          {
-             Role:    "user",
-             Content: string(jsonData),
-          },
-       },
-    })
+                                            Вернуть **только** JSON вида:
+                                            {"путь к файлу": "код файла"}
+                                            Путь к файлу нужно оставить неизменным, он всегда должен начинаться с /app-project/
+                                            Никаких примеров добавлять не нужно.
+                                            Без комментариев, без Markdown, без текста до или после.
+                                            Если хочешь что-то пояснить — НЕ пиши этого. Только JSON. Если не можешь выполнить задачу — верни пустой объект {}`,
+   			},
+   			{
+   				Role:    "user",
+   				Content: string(jsonData),
+   			},
+   		},
+   	})
+   	if err != nil {
+   		log.Fatal("Ошибка запроса:", err)
+   	}
 
-    if err != nil {
-       log.Fatalf("Ошибка OpenAI запроса: %v", err)
-    }
+   	content := response.Choices[0].Message.Content
 
-    raw := response.Choices[0].Message.Content
+   	// На случай, если модель что-то написала до или после JSON — вырезаем только {...}
+   	re := regexp.MustCompile(`\{[\s\S]*\}`)
+   	match := re.FindString(content)
+   	if match == "" {
+   		log.Fatal("Не найден JSON в ответе:", content)
+   	}
 
-    // Страховка на случай, если модель всё же добавит текст
-    re := regexp.MustCompile(`(?s)\{.*\}`)
-    content := re.FindString(raw)
-    if content == "" {
-       log.Fatalf("Не удалось извлечь JSON из ответа: %s", raw)
-    }
 
     var files map[string]string
     err = json.Unmarshal([]byte(content), &files)
     if err != nil {
-       log.Fatalf("Ошибка разбора JSON: %v\nRaw content: %s", err, content)
+      log.Fatalf("Ошибка разбора JSON: %v\nRaw content: %s", err, content)
     }
 
-    return files
+   return files
+
 }
 
 func saveFiles(basePath string, files map[string]string) {
@@ -201,4 +211,8 @@ func validateAndFixPath(path string) (string, error) {
 	}
 
 	return path, nil
+}
+
+func handleGenerate() {
+
 }

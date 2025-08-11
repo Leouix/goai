@@ -1,7 +1,6 @@
 package main
 
 import (
-    "log"
     "context"
     "net/http"
     "encoding/json"
@@ -10,7 +9,6 @@ import (
 
     "github.com/gin-gonic/gin"
     openai "github.com/sashabaranov/go-openai"
-    "github.com/joho/godotenv"
 )
 
 type RequestBody struct {
@@ -21,18 +19,6 @@ type RequestBody struct {
 var openaiClient *openai.Client
 
 func main() {
-
-    err := godotenv.Load("../.env")
-    if err != nil {
-        log.Fatal("Ошибка загрузки .env файла")
-    }
-
-    apiKey := os.Getenv("OPENAI_API_KEY")
-    if apiKey == "" {
-        log.Fatal("OPENAI_API_KEY не задан")
-    }
-
-    openaiClient = openai.NewClient(apiKey)
 
     r := gin.Default()
     r.POST("/generate", handleGenerate)

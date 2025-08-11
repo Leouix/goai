@@ -19,12 +19,12 @@ var openaiClient *openai.Client
 
 func main() {
 
-    err := godotenv.Load()
+    err := godotenv.Load(".env")
     if err != nil {
         log.Fatal("Ошибка загрузки .env файла")
     }
 
-    basePath := "/home/leouix/apps/goai"
+    basePath := "/app-project"
 
     // 1. Находим все файлы с @todo
     todos := findTodos(basePath, "// @todo")
@@ -127,14 +127,16 @@ func generateFilesFromOpenAI(jsonData string) map[string]string {
        Messages: []openai.ChatCompletionMessage{
           {
              Role: "system",
-              Content: `Ты помощник программиста, мы пишем на PHP, Laravel, Symphony, Javascript, Go, используешь Docker, SQL и прочие технологии. Тебе предоставляется запрос вида: {'путь к   файлу': 'страница'}.
-                  Твоя задача: выполнить @todo, указанный на странице и заменить @todo своим кодом. Например удалить строку '// @todo выполнить проверку переменной $var' и на этом месте написать if (isset($var)) ...
+              Content: `Ты помощник программиста, мы пишем на PHP, Laravel, Symphony, Javascript, Go, используешь Docker, SQL и прочие технологии. Тебе предоставляется запрос вида: {'путь к файлу': 'страница'}.
+                  Твоя задача: проанализировать код страницы на предмет задачи, описанной в @todo, выполнить @todo и заменить @todo своим кодом. Например удалить строку '// @todo выполнить проверку переменной $var' и на этом месте написать if (isset($var)) ...
 
                   Вернуть **только** JSON вида:
-                  {"путь к   файлу": "...исправленный код файла..."}
-                  путь к файлу нужно оставить неизменным.
+                  {"путь к файлу": "код файла"}
+                  Путь к файлу нужно оставить неизменным, он всегда должен начинаться с /app-project/....
+                  Никаких примеров добавлять не нужно.
                   Без комментариев, без Markdown, без текста до или после.
-                  Если хочешь что-то пояснить — НЕ пиши этого. Верни только JSON.`,
+                  Если хочешь что-то пояснить — НЕ пиши этого.
+                  Мне очень важно получить формат JSON.`,
           },
           {
              Role:    "user",
@@ -167,7 +169,14 @@ func generateFilesFromOpenAI(jsonData string) map[string]string {
 
 func saveFiles(basePath string, files map[string]string) {
     for relPath, code := range files {
-       fullPath := filepath.Join(relPath)
+        fullPath := filepath.Join(relPath)
+
+        newPath, err := validateAndFixPath(fullPath)
+        if err != nil {
+            fmt.Printf("newPath Ошибка: %v\n", err)
+        } else {
+            fmt.Printf("newPath OK: %s\n", newPath)
+        }
 
        if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
           log.Fatalf("Ошибка создания директорий для %s: %v", fullPath, err)
@@ -180,4 +189,18 @@ func saveFiles(basePath string, files map[string]string) {
        fmt.Printf("Создан файл: %s\n", fullPath)
     }
     fmt.Println("✅ Все файлы успешно созданы.")
+}
+
+func validateAndFixPath(path string) (string, error) {
+	// 1. Проверка, начинается ли с "app-project"
+	if !strings.HasPrefix(path, "app-project") && !strings.HasPrefix(path, "/app-project") {
+		return path, fmt.Errorf("путь должен начинаться с 'app-project'")
+	}
+
+	// 2. Если не начинается с "/", добавить
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+
+	return path, nil
 }

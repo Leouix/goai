@@ -10,10 +10,10 @@ services:
     depends_on:
       - goai-db
     volumes:
-      - ./:/goai
-      - /home/leouix/apps/goai:/goai-tmp
-    working_dir: /goai/app
-    command: ["go", "run", "main.go"]
+      - ./:/app
+      - /home/leouix/apps/dobrbobr:/app-project
+    working_dir: /app
+    command: ["go", "run", "todos.go"]
 
   goai-db:
     image: mysql:8.0

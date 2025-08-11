@@ -45,9 +45,7 @@ func main() {
        log.Fatalf("Ошибка кодирования в JSON: %v", err)
     }
 
-    fmt.Printf("jsonData: %s\n", jsonData)
-
-    // Если нужно, раскомментируйте код ниже, чтобы продолжить выполнение
+    fmt.Printf("jsonData для запроса к OpenAI: %s\n", jsonData)
 
     // Запрос к OpenAI
     files := generateFilesFromOpenAI(string(jsonData))

@@ -11,7 +11,7 @@ services:
       - goai-db
     volumes:
       - ./:/app
-      - /home/leouix/apps/dobrbobr:/app-project
+      - ${APP_PROJECT_URL}:/app-project
     working_dir: /app
     command: ["go", "run", "todos.go"]
 

@@ -49,16 +49,18 @@ func main() {
 
     fmt.Printf("jsonData для запроса к OpenAI: %s\n", jsonData)
 
-    if string(jsonData) != "" {
-         // Запрос к OpenAI
-        files := generateFilesFromOpenAI(string(jsonData))
-
-        fmt.Printf("ответ OpenAI: %s\n", files)
-
-        // Сохраняем результат
-        saveFiles(basePath, files)
+    if len(cleanedTodos) == 0 {
+        fmt.Println("Нет задач для OpenAI")
+        return
     }
 
+      // Запрос к OpenAI
+    files := generateFilesFromOpenAI(string(jsonData))
+
+    fmt.Printf("ответ OpenAI: %s\n", files)
+
+    // Сохраняем результат
+    saveFiles(basePath, files)
 
 }
 
